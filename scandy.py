@@ -1,7 +1,11 @@
 #!/bin/python
 
-from ScandyBasic import *
+import time
 from datetime import datetime
+
+from ScandyBasic import *
+from vuln import scan_vulns
+
 
 class Scandy(ScandyBasic):
     def __init__(self):
@@ -9,15 +13,6 @@ class Scandy(ScandyBasic):
         self.target = self.args.target
 
     def portscan(self, ip_ports):
-        # print("portscan working")
-        # # ip, port = ip_port
-        # print(f'{ip_port}\n')
-        # ans, unans = scapy.sr(scapy.IP(dst=ip_port[0]) /
-        #                       scapy.TCP(sport=scapy.RandShort(), dport=ip_port[-1], flags="S"))
-        # print(ans.summary())
-        # print('working')
-        # ip = ip_ports[0]
-        # ports = ip_ports[-1]
         res = dict()
         message = ''
         status = ''
@@ -72,19 +67,36 @@ def main():
 
     # scan for devices on the network
     all_ips = f.target_ip_processor()
-    print(colored(f"{'-' * 120}\nIP Address{'':<10}\tHostname{'':<10}\tMAC Address{'':<10}\tManufacturer\n{'-' * 120}", 'blue'))
+    # =======================================================================
+    start_time = time.time()
     k = f.speed(f.ip_validator, all_ips)
-    active_ips = list(set([x for x, y in k]))
-    print(f"{colored(len(active_ips),'green')} were discovered")
+    end_time = time.time()
+    print(f"Duration {end_time - start_time} seconds")
+    # ==========================================================================
+    active_ips = set()
+    table = ColorTable()
+    table.field_names = ["IP Address", "Hostname", "Mac Address", "Manufacturer"]
+    for i in k:
+        active_ips.add(i[0])
+        if i in table.rows:
+            continue
+        table.add_row(i)
+    active_ips = list(active_ips)
+
+    print(table)
+    print(f"{colored(len(active_ips), 'green')} devices were discovered")
 
     active_ips.sort()
     if len(active_ips) == 0:
         print(colored(f"{all_ips} cannot be reached", 'red'))
         sys.exit()
-    # print(f"\nScanning for open ports ...")
-    # print("{:<15} {:<15} {:<15} {:<15}".format('Ports', 'States', 'Service', 'Banner'))
+    start_time = time.time()
     res = f.speed(f.portscan, active_ips, f.scan_ports)
-    f.table_print(res)
+    end_time = time.time()
+    print(f"Time taken to scan  {end_time - start_time} seconds")
+    # ==========================================================================
+    v = f.table_print(res)
+    scan_vulns(v)
 
 
 if __name__ == '__main__':

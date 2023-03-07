@@ -13,13 +13,17 @@ from collections import deque
 from itertools import islice
 import requests
 import scapy.all as scapy
-import vulners
 from manuf import manuf
 from termcolor import colored
 
 
 class ScandyBasic:
     def __init__(self):
+        self.scan_ports = None
+        self.inactive_ips = None
+        self.active_ips = None
+        self.target = None
+        self.args = None
         self.argument_processor()
         self.realtime = False
 
@@ -208,6 +212,7 @@ class ScandyBasic:
     def speed(self, func, iterable_obj, ports=None):
         '''
 
+        :param ports: 
         :param func: The function you are executing
         :param iterable_obj: the iterable object eg list that you want to pass to the function
         :return: results of the function

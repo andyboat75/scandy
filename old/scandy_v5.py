@@ -189,7 +189,7 @@ class ScandyCore(ScandyBasic):
         return
 
     def NetworkScanner(self):
-        ips = self.IpAddressValidator()
+        self.IpAddressValidator()
         active_ip = []
         # active_ip = [(i, v) for i, v in ips if v['status'] == 'alive']
         for i in range(ips.qsize):

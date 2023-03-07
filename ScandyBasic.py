@@ -14,13 +14,18 @@ from itertools import islice
 import requests
 import scapy.all as scapy
 from datetime import datetime
-import vulners
+from prettytable.colortable import ColorTable
 from manuf import manuf
 from termcolor import colored
 
 
 class ScandyBasic:
     def __init__(self):
+        self.args = None
+        self.target = None
+        self.active_ips = None
+        self.inactive_ips = None
+        self.scan_ports = None
         self.argument_processor()
         self.realtime = False
 
@@ -99,44 +104,29 @@ class ScandyBasic:
         """
         self.active_ips = deque()
         self.inactive_ips = []
-        hostname = [f"{'':<15}"]
+        hostname = [""]
+
         for ip in ips:
 
             try:
                 ip = socket.gethostbyname(ip)
             except socket.gaierror:
-                # print(f"Hostname {ip} could not be resolved")
                 pass
 
             try:
                 hostname = socket.gethostbyaddr(ip)
-                # print(f"Hostname - {hostname[0]}")
             except socket.herror:
                 if not host_stat(ip):
-                    # print(f"Target({ip}) seems to be down")
                     continue
-                else:
-                    pass
 
             try:
                 mac = scapy.getmacbyip(ip).upper()
             except:
                 mac = ""
-            print(f"{ip}{'':<7}\t{hostname[0]}{'':<7}\t{mac}{'':<7}\t{mac_manufacturer(mac)}")
-            self.active_ips.append((ip, mac))
 
-            # try:
-            #     ans, unans = scapy.srp(scapy.Ether(dst="ff:ff:ff:ff:ff:ff") /
-            #                            scapy.ARP(pdst=ip), timeout=3, verbose=False
-            #                            )
-            # except Exception as e:
-            #     print(e)
-            #     continue
-            # if len(ans) > 0:
-            #     act_ip = ans[-1]
-            #     mac = act_ip.answer.payload.hwsrc.upper()
-            #     print(f"{ip}\t{mac}\t{self.mac_manufactuer(mac)}")
-            #     self.active_ips.append((act_ip.answer.payload.psrc, mac))
+            # print(f"{ip}{'':<7}\t{hostname[0]}{'':<7}\t{mac}{'':<7}\t{mac_manufacturer(mac)}")
+            self.active_ips.append([ip, hostname[0], mac, mac_manufacturer(mac)])
+
 
         return self.active_ips
 
@@ -211,6 +201,7 @@ class ScandyBasic:
     def speed(self, func, iterable_obj, ports=None):
         '''
 
+        :param ports:
         :param func: The function you are executing
         :param iterable_obj: the iterable object eg list that you want to pass to the function
         :return: results of the function
@@ -250,6 +241,7 @@ class ScandyBasic:
         if self.realtime:
             return
         res = dict()
+        vuln_arg = []
         for r in data:
             ip, d = list(r.items())[0]
             if ip not in res.keys():
@@ -257,16 +249,24 @@ class ScandyBasic:
             res[ip].append(d)
 
         for k in res.keys():
+
             line = sorted([i for i in from_iterable(res[k])], key=lambda x: x['port'])
-            print(f"\nScanned results for {k}\n {'-' * 120}")
+
+            table = ColorTable()
             if len(line) == 0:
                 print(f"{colored(k + ' has no open ports', 'red')}")
                 continue
             else:
-                print(colored("    {:<10} {:<10} {:<10} {:<10}".format('Ports', 'States', 'Service', 'Banner')), 'blue')
+                print(f"\nScanned results for {k}\n")
+                table.field_names = ['Ports', 'States', 'Service', 'Banner']
+                # print(colored("    {:<10} {:<10} {:<10} {:<10}".format('Ports', 'States', 'Service', 'Banner')), 'blue')
 
             for d in line:
-                print("[+] {:<10} {:<10} {:<15} {:<10}".format(d['port'], d['status'], d['service'], d['banner']))
+                table.add_row([d['port'], d['status'], d['service'], d['banner']])
+                vuln_arg.append((k,d['port'], d['banner']))
+            print(table)
+                # print("[+] {:<10} {:<10} {:<15} {:<10}".format(d['port'], d['status'], d['service'], d['banner']))
+        return vuln_arg
 
 
 def html_port(ip, port):
