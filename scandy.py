@@ -1,7 +1,7 @@
 #!/bin/python
 
 from ScandyBasic import *
-
+from datetime import datetime
 
 class Scandy(ScandyBasic):
     def __init__(self):
@@ -32,20 +32,20 @@ class Scandy(ScandyBasic):
                         # service = portservice(port)
                         if self.realtime:
                             # message = f"{port}/tcp\t     {colored('close', 'red')}\n"
-                            message = f"{port}/tcp{'':<10} {colored('close', 'red')}{'':<10} {'':<10} {'':<10}"
+                            message = f"[-] {port}/tcp{'':<10} {colored('close', 'red')}{'':<10} {'':<10} {'':<10}"
                             print(message)
-                        status = 'close'
+                        status = colored('close', 'red')
                         res[ip].append({
                             'status': status,
                             'port': port
                         })
                         continue
                 else:
-                    service = portservice(port)
+                    service = port_service(port)
                     banner = self.port_banner(s, ip, port)
-                    status = 'open'
+                    status = colored('open', 'green')
                     # message = f"{port}\t     {colored('open', 'green')}\t     {service} {banner}"
-                    message = f"{port} {'':<10}{colored(status, 'green')}{'':<10}{service}{'':<10}{banner} {'':<10}"
+                    message = f"[+] {port} {'':<10}{colored(status, 'green')}{'':<10}{service}{'':<10}{banner} {'':<10}"
                     if self.realtime:
                         print(message)
                     # print(message)
@@ -59,26 +59,33 @@ class Scandy(ScandyBasic):
         return res
 
 
-if __name__ == '__main__':
+def main():
     f = Scandy()
-    # print(f.args)
     p = f.port_port_range_validator()
     f.scan_ports = list(set([i for i in p]))
     f.scan_ports.sort()
-    # print('-'*100)
-    # c.sort()
-    # print(c)
 
-    print(f"{'-' * 60}\n Starting ScAndy at local:{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')} \n{'-' * 60}\n"
+    print(f"Starting ScAndy at local:{datetime.now().strftime('%d/%m/%Y, %H:%M:%S')}"
           f"\n\n"
-          f"Discovered devices on the target network"
+          f"Scanning for connected devices on the network"
           f" {f.args.target}")
+
+    # scan for devices on the network
     all_ips = f.target_ip_processor()
-    print(f"{'-' * 120}\nIP Address{'':<10}\tHostname{'':<10}\tMAC Address{'':<10}\tManufacturer\n{'-' * 120}")
+    print(colored(f"{'-' * 120}\nIP Address{'':<10}\tHostname{'':<10}\tMAC Address{'':<10}\tManufacturer\n{'-' * 120}", 'blue'))
     k = f.speed(f.ip_validator, all_ips)
     active_ips = list(set([x for x, y in k]))
+    print(f"{colored(len(active_ips),'green')} were discovered")
+
     active_ips.sort()
-    print(f"\nScanning for open ports ...")
-    print("{:<15} {:<15} {:<15} {:<15}".format('Ports', 'States', 'Service', 'Banner'))
+    if len(active_ips) == 0:
+        print(colored(f"{all_ips} cannot be reached", 'red'))
+        sys.exit()
+    # print(f"\nScanning for open ports ...")
+    # print("{:<15} {:<15} {:<15} {:<15}".format('Ports', 'States', 'Service', 'Banner'))
     res = f.speed(f.portscan, active_ips, f.scan_ports)
     f.table_print(res)
+
+
+if __name__ == '__main__':
+    main()

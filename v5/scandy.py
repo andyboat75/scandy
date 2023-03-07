@@ -1,8 +1,7 @@
 #!/bin/python
 
 from ScandyBasic import *
-
-
+from datetime import datetime
 class Scandy(ScandyBasic):
     def __init__(self):
         super().__init__()
@@ -77,6 +76,9 @@ if __name__ == '__main__':
     print(f"{'-' * 120}\nIP Address{'':<10}\tHostname{'':<10}\tMAC Address{'':<10}\tManufacturer\n{'-' * 120}")
     k = f.speed(f.ip_validator, all_ips)
     active_ips = list(set([x for x, y in k]))
+    if len(active_ips) == 0:
+        print(f"{all_ips} cannot be reached")
+        sys.exit()
     active_ips.sort()
     print(f"\nScanning for open ports ...")
     print("{:<15} {:<15} {:<15} {:<15}".format('Ports', 'States', 'Service', 'Banner'))

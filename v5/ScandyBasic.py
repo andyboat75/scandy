@@ -11,97 +11,11 @@ import sys
 import telnetlib
 from collections import deque
 from itertools import islice
-
 import requests
 import scapy.all as scapy
-# import vulners
+import vulners
 from manuf import manuf
 from termcolor import colored
-
-
-# except ImportError:
-#     print(f"run the command pip install -r requirements.txt to install required libraries")
-
-# scapy.conf.layers.filter([scapy.Ether, scapy.IP, scapy.ARP, scapy.ICMP])
-
-def html_port(ip, port):
-    uploads = {'points': 3, 'total': 10}
-    req = requests.get(f"http://{ip}:{port}/", params=uploads)
-    return req.headers['Server'].encode("utf-8")
-
-
-def ftp_port(ip, port):
-    ftp = ftplib.FTP()
-    ftp.connect(ip, port)
-    banner = ftp.getwelcome()
-    try:
-        login = ftp.login()
-        if 'successful' in login:
-            banner = banner + colored('    Vulnerable to anonymous login', 'red')
-        ftp.quit()
-    except:
-        pass
-
-    return banner.encode("utf-8")
-
-
-def batched(iterable, n):
-    "Batch data into tuples of length n. The last batch may be shorter."
-    # batched('ABCDEFG', 3) --> ABC DEF G
-    if n < 1:
-        raise ValueError('n must be at least one')
-    it = iter(iterable)
-    while batch := tuple(islice(it, n)):
-        yield batch
-
-
-def ip_port_pair(x, y):
-    for i in x:
-        for j in y:
-            yield i, j
-
-
-def from_iterable(iterables):
-    # chain.from_iterable(['ABC', 'DEF']) --> A B C D E F
-    for it in iterables:
-        for element in it:
-            yield element
-
-
-def portservice(port):
-    try:
-        return socket.getservbyport(port, 'tcp')
-    except:
-        return "Unknown"
-
-
-def chain(*iterables):
-    # chain('ABC', 'DEF') --> A B C D E F
-    for it in iterables:
-        for element in it:
-            yield element
-
-
-def valid_port_number(x):
-    if 0 < x < 65536:
-        return True
-    else:
-        print(
-            f'port {x} is invalid port number. Port should be within 1 to 65536')
-        sys.exit()
-
-
-def host_stat(ip):
-    if subprocess.call(f"ping -c 1 {ip}", stdout=False, stderr=False) == 0 or \
-            subprocess.call(f"ping -n 1 {ip}", stdout=False) == 0:
-        return True
-    return False
-
-
-def mac_manufactuer(mac):
-    p = manuf.MacParser(update=False)
-    manufacturer = p.get_manuf_long(mac)
-    return "Unknown" if manufacturer is None else manufacturer
 
 
 class ScandyBasic:
@@ -188,6 +102,7 @@ class ScandyBasic:
         for ip in ips:
 
             try:
+                print(ip)
                 ip = socket.gethostbyname(ip)
             except socket.gaierror:
                 # print(f"Hostname {ip} could not be resolved")
@@ -209,7 +124,7 @@ class ScandyBasic:
 
             # try:
             #     ans, unans = scapy.srp(scapy.Ether(dst="ff:ff:ff:ff:ff:ff") /
-            #                            scapy.ARP(pdst=ip), timeout=1, verbose=False
+            #                            scapy.ARP(pdst=ip), timeout=3, verbose=False
             #                            )
             # except Exception as e:
             #     print(e)
@@ -253,7 +168,8 @@ class ScandyBasic:
 
         # return (chain(self.args.port, self.args.portrange))
 
-    def port_banner2(self, ip, port):
+    @staticmethod
+    def port_banner2(ip, port):
         banner = ""
         try:
             with telnetlib.Telnet(ip, port, timeout=10) as tn:
@@ -339,3 +255,88 @@ class ScandyBasic:
             print("{:<10} {:<10} {:<10} {:<10}".format('Ports', 'States', 'Service', 'Banner'))
             for d in line:
                 print("{:<10} {:<10} {:<10}".format(d['port'], d['status'], d['service'], d['banner']))
+
+
+def html_port(ip, port):
+    uploads = {'points': 3, 'total': 10}
+    req = requests.get(f"http://{ip}:{port}/", params=uploads)
+    return req.headers['Server'].encode("utf-8")
+
+
+def ftp_port(ip, port):
+    ftp = ftplib.FTP()
+    ftp.connect(ip, port)
+    banner = ftp.getwelcome()
+    try:
+        login = ftp.login()
+        if 'successful' in login:
+            banner = banner + colored('    Vulnerable to anonymous login', 'red')
+        ftp.quit()
+    except:
+        pass
+
+    return banner.encode("utf-8")
+
+
+def batched(iterable, n):
+    "Batch data into tuples of length n. The last batch may be shorter."
+    # batched('ABCDEFG', 3) --> ABC DEF G
+    if n < 1:
+        raise ValueError('n must be at least one')
+    it = iter(iterable)
+    while batch := tuple(islice(it, n)):
+        yield batch
+
+
+def ip_port_pair(x, y):
+    for i in x:
+        for j in y:
+            yield i, j
+
+
+def from_iterable(iterables):
+    # chain.from_iterable(['ABC', 'DEF']) --> A B C D E F
+    for it in iterables:
+        for element in it:
+            yield element
+
+
+def portservice(port):
+    try:
+        return socket.getservbyport(port, 'tcp')
+    except:
+        return "Unknown"
+
+
+def chain(*iterables):
+    # chain('ABC', 'DEF') --> A B C D E F
+    for it in iterables:
+        for element in it:
+            yield element
+
+
+def valid_port_number(x):
+    if 0 < x < 65536:
+        return True
+    else:
+        print(
+            f'port {x} is invalid port number. Port should be within 1 to 65536')
+        sys.exit()
+
+
+def host_stat(ip):
+    """
+    This ping the ip if it is alive
+    :param ip:
+    :return:
+    """
+    if subprocess.run(['ping', '-c', '1', ip], capture_output=True).returncode == 0 or \
+            subprocess.run(['ping', '-n', '1', ip], capture_output=True).returncode == 0:
+        return True
+    return False
+
+
+def mac_manufactuer(mac):
+    p = manuf.MacParser(update=False)
+    manufacturer = p.get_manuf_long(mac)
+    return "Unknown" if manufacturer is None else manufacturer
