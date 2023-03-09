@@ -5,6 +5,7 @@
 import argparse
 import concurrent.futures
 import ftplib
+import platform
 import socket
 import subprocess
 import sys
@@ -26,8 +27,9 @@ class ScandyBasic:
         self.active_ips = None
         self.inactive_ips = None
         self.scan_ports = None
-        self.argument_processor()
         self.realtime = False
+
+        self.argument_processor()
 
     def scandy_program_banner(self):
         with open('./banner.txt') as file:
@@ -342,10 +344,17 @@ def host_stat(ip):
     :param ip:
     :return:
     """
-    if subprocess.run(['ping','c','-1',ip], capture_output=True).returncode == 0 or \
-            subprocess.run(['ping','n','-1',ip], capture_output=True).returncode == 0:
-        return True
-    return False
+    pl = platform.platform()
+    if "windows" in pl.lower():
+        return "unreachable" not in str(subprocess.run(['ping','-n','1',ip], capture_output=True).stdout).lower()
+    else:
+        return "unreachable" not in str(subprocess.run(['ping', '-c', '1', ip], capture_output=True).stdout).lower()
+
+
+    # if subprocess.run(['ping','-c','1',ip], capture_output=True).returncode == 0 or \
+    #         subprocess.run(['ping','-n','1',ip], capture_output=True).returncode == 0:
+    #     return True
+    # return False
 
     # if subprocess.call(f"ping -c 1 {ip}", stdout=False, stderr=False) == 0 or \
     #         subprocess.call(f"ping -n 1 {ip}", stdout=False) == 0:

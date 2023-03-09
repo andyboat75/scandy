@@ -69,7 +69,8 @@ def main():
     all_ips = f.target_ip_processor()
     # =======================================================================
     start_time = time.time()
-    k = f.speed(f.ip_validator, all_ips)
+    k = f.ip_validator(all_ips)
+    # k = f.speed(f.ip_validator, all_ips)
     end_time = time.time()
     print(f"Duration {end_time - start_time} seconds")
     # ==========================================================================
