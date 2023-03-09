@@ -69,8 +69,8 @@ def main():
     all_ips = f.target_ip_processor()
     # =======================================================================
     start_time = time.time()
-    k = f.ip_validator(all_ips)
-    # k = f.speed(f.ip_validator, all_ips)
+    # k = f.ip_validator(all_ips)
+    k = f.speed(f.ip_validator, all_ips)
     end_time = time.time()
     print(f"Duration {end_time - start_time} seconds")
     # ==========================================================================
@@ -84,8 +84,8 @@ def main():
         table.add_row(i)
     active_ips = list(active_ips)
 
-    print(table)
-    print(f"{colored(len(active_ips), 'green')} devices were discovered")
+    print(table.get_string(sortby="IP Address"))
+    # print(f"{colored(len(active_ips), 'green')} devices were discovered")
 
     active_ips.sort()
     if len(active_ips) == 0:
@@ -97,7 +97,7 @@ def main():
     print(f"Time taken to scan  {end_time - start_time} seconds")
     # ==========================================================================
     v = f.table_print(res)
-    scan_vulns(v)
+    # scan_vulns(v)
 
 
 if __name__ == '__main__':

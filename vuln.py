@@ -42,9 +42,19 @@ class CVEcheck:
         l = len(results)
         table = ColorTable(theme=Themes.OCEAN)
         table.field_names = ["IP Address : Port", 'CVE Code(s)', "Title", "Family", "CVSS", "Link"]
+
+
+        if len(results) == 0:
+            print(f"No known exploit was found for {self.port}. This may be as a result of the port banner used."
+                  f"Check exploitdb.")
+            table.add_row([
+                    f"{self.ip}: {self.port}", '', '', '', '', ''
+                ])
+            print(table)
+            return
+
         print(f"\nVulnerability search results for {self.ip}:{self.port} -> {self.text_check}")
         count = 0
-        if len(results) == 0: return
         for res in results:
             count += 1
             if count == 1:

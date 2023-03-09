@@ -14,10 +14,10 @@ from collections import deque
 from itertools import islice
 import requests
 import scapy.all as scapy
-from datetime import datetime
 from prettytable.colortable import ColorTable
 from manuf import manuf
 from termcolor import colored
+from vuln import scan_vulns
 
 
 class ScandyBasic:
@@ -251,15 +251,16 @@ class ScandyBasic:
             res[ip].append(d)
 
         for k in res.keys():
-
+            # vuln_arg = []
             line = sorted([i for i in from_iterable(res[k])], key=lambda x: x['port'])
 
             table = ColorTable()
             if len(line) == 0:
-                print(f"{colored(k + ' has no open ports', 'red')}")
+
+                print(f"\n[-]{colored(k + ' has no open ports', 'red')}\n")
                 continue
             else:
-                print(f"\nScanned results for {k}\n")
+                print(f"\n[+] Scanned results for {k}\n")
                 table.field_names = ['Ports', 'States', 'Service', 'Banner']
                 # print(colored("    {:<10} {:<10} {:<10} {:<10}".format('Ports', 'States', 'Service', 'Banner')), 'blue')
 
@@ -267,6 +268,7 @@ class ScandyBasic:
                 table.add_row([d['port'], d['status'], d['service'], d['banner']])
                 vuln_arg.append((k,d['port'], d['banner']))
             print(table)
+            scan_vulns(vuln_arg)
                 # print("[+] {:<10} {:<10} {:<15} {:<10}".format(d['port'], d['status'], d['service'], d['banner']))
         return vuln_arg
 
